@@ -1,0 +1,87 @@
+#define BLYNK_PRINT Serial
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+#include <DHT.h>
+
+const int soil = A0; 
+int LDR = A0;
+
+char auth[] = "WqdufTInWxvte1Mj8YowvFPaBllp_5zw";
+char ssid[] = "Alex";
+char pass[] = "123hrd10";
+
+
+#define DHTPIN 14
+
+//#define DHTTYPE DHT11
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup()
+{
+ Serial.begin(9600);
+ Blynk.begin(auth, ssid, pass);
+
+ dht.begin();
+
+}
+
+
+int analogRead1() {
+    digitalWrite(soil, HIGH); 
+    digitalWrite(LDR, LOW);
+    return analogRead(0);
+}
+ 
+int analogRead2() {
+    digitalWrite(soil, LOW); 
+    digitalWrite(LDR, HIGH); 
+    return analogRead(0);
+}
+
+
+void loop()
+{
+ Blynk.run();
+
+ delay(2000);
+ float t = dht.readTemperature();
+ float h = dht.readHumidity();
+
+ float moisture;
+ int sensor_analog;
+ sensor_analog = analogRead1();
+ moisture = ( 100 - ( (sensor_analog/1024.00) * 100 ) );
+
+ int sensorValue = 0;
+ sensorValue = analogRead2(); 
+
+delay(100);
+
+ if (isnan(t) || isnan(h)) {
+
+
+ Serial.print("DHT Failed!");
+ return; 
+ }
+ Blynk.virtualWrite(V1, t);
+ Blynk.virtualWrite(V2, h);
+ Blynk.virtualWrite(V3, moisture);
+ Blynk.virtualWrite(V4, sensorValue);
+ 
+ Serial.print("Temperature: ");
+ Serial.print(t);
+ Serial.print("°C | ");
+ Serial.print("Humidity ");
+ Serial.print(h);
+ Serial.println("%");
+
+ Serial.print("Moisture = ");
+ Serial.print(moisture);
+ Serial.print("%\n");
+
+ Serial.print("LDR = ");
+ Serial.println(sensorValue); 
+ 
+ delay(1000);
+}
